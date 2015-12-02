@@ -32,7 +32,7 @@
   },
   "peerDependencies": {
     "react": "^0.14.0",
-    "gl-react": "*"
+    "gl-react": ">= 2.0.0"
   },
   "dependencies": {
     "babelify": "^6.1.3",
