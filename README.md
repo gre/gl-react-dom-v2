@@ -4,7 +4,7 @@
 
 WebGL bindings for React to implement complex effects over images and content, in the descriptive VDOM paradigm.
 
-**`gl-react-dom` is an implementation of `gl-react` for React Native. Please [read the main gl-react README](https://github.com/ProjectSeptemberInc/gl-react/) for more information.**
+**`gl-react-dom` is an implementation of `gl-react` for React. Please [read the main gl-react README](https://github.com/ProjectSeptemberInc/gl-react/) for more information.**
 
 [![](https://github.com/ProjectSeptemberInc/gl-react/raw/master/docs/examples/blur.gif)](http://projectseptemberinc.github.io/gl-react/Examples/Blur/)
 
