@@ -3,12 +3,6 @@
   "version": "2.0.0",
   "description": "WebGL bindings for react to implement complex effects over images and content, in the descriptive VDOM paradigm",
   "main": "src/index.js",
-  "browserify": {
-    "transform": [
-      "babelify",
-      "envify"
-    ]
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ProjectSeptemberInc/gl-react-dom.git"
@@ -25,8 +19,13 @@
     "url": "https://github.com/ProjectSeptemberInc/gl-react-dom/issues"
   },
   "homepage": "https://github.com/ProjectSeptemberInc/gl-react-dom#readme",
+  "browserify": {
+    "transform": ["babelify"]
+  },
   "devDependencies": {
-    "browserify": "^12.0.1",
+    "babel-preset-es2015": "^6.1.18",
+    "babel-preset-react": "^6.1.18",
+    "babel-preset-stage-1": "^6.1.18",
     "eslint": "^1.2.0",
     "eslint-plugin-react": "^3.2.3"
   },
@@ -35,8 +34,6 @@
     "gl-react": ">= 2.0.0"
   },
   "dependencies": {
-    "babelify": "^6.1.3",
-    "envify": "^3.4.0",
     "gl-fbo": "^2.0.5",
     "gl-shader": "^4.0.5",
     "gl-texture2d": "^2.0.9",
