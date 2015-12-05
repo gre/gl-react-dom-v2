@@ -26,7 +26,7 @@
     "baboon-image": "^2.0.0",
     "ndarray": "^1.0.18",
     "gl-react-dom": "file:../..",
-    "gl-react": "file:../../../gl-react",
+    "gl-react": "^2.0.0",
     "glsl-fast-gaussian-blur": "^1.0.2",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",

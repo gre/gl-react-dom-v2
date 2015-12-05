@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "gl-react-dom": "file:../..",
-    "gl-react": "file:../../../gl-react",
+    "gl-react": "^2.0.0",
     "glsl-fast-gaussian-blur": "^1.0.2",
     "glslify": "^2.3.1",
     "react": "^0.14.0",
