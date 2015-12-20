@@ -49,6 +49,16 @@ function extractShaderDebug (shader) {
   return { types: { uniforms } };
 }
 
+function defer() {
+  const deferred = {};
+  const promise = new Promise(function(resolve, reject) {
+    deferred.resolve = resolve;
+    deferred.reject  = reject;
+  });
+  deferred.promise = promise;
+  return deferred;
+}
+
 class GLCanvas extends Component {
 
   constructor (props) {
@@ -74,13 +84,19 @@ class GLCanvas extends Component {
       if (this.props.onLoad) this.props.onLoad();
     }
     this._autoredraw = this.props.autoRedraw;
-
-    this._captureListeners = [];
   }
 
   captureFrame (cb) {
-    this._captureListeners.push(cb);
+    const promise = (
+      this._pendingCaptureFrame || // use pending capture OR create a new captureFrame pending
+      (this._pendingCaptureFrame = defer())
+    ).promise;
+    if (typeof cb === "function") {
+      console.warn("GLSurface: callback parameter of captureFrame is deprecated, use the returned promise instead"); // eslint-disable-line no-console
+      promise.then(cb);
+    }
     this.requestDraw();
+    return promise;
   }
 
   setDebugProbe (params) {
@@ -510,10 +526,10 @@ class GLCanvas extends Component {
       });
     }
 
-    if (this._captureListeners.length > 0) {
+    if (this._pendingCaptureFrame) {
       const frame = this.canvas.toDataURL();
-      this._captureListeners.forEach(listener => listener(frame));
-      this._captureListeners = [];
+      this._pendingCaptureFrame.resolve(frame);
+      this._pendingCaptureFrame = undefined;
     }
   }
 

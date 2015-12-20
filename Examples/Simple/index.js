@@ -30,7 +30,7 @@ class Simple extends React.Component {
   }
 
   onCapture1 () {
-    this.refs.helloGL.captureFrame(data64 => {
+    this.refs.helloGL.captureFrame().then(data64 => {
       location.href = data64;
     });
   }
