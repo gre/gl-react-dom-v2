@@ -3,6 +3,8 @@ const GLCanvas = require("./GLCanvas");
 const {createSurface} = require("gl-react");
 const pointerEventsProperty = require("./pointerEventsProperty");
 
+const getPixelRatio = props => props.scale || window.devicePixelRatio || 1;
+
 function renderVcontent (width, height, id, children, { visibleContent }) {
   const content = React.Children.only(children);
   const childrenStyle = {
@@ -35,4 +37,4 @@ function renderVcontainer ({ style, visibleContent, eventsThrough, width, height
   </div>;
 }
 
-module.exports = createSurface(renderVcontainer, renderVcontent, renderVGL);
+module.exports = createSurface(renderVcontainer, renderVcontent, renderVGL, getPixelRatio);

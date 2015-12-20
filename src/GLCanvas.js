@@ -63,9 +63,6 @@ class GLCanvas extends Component {
 
   constructor (props) {
     super(props);
-    this.state = {
-      scale: window.devicePixelRatio
-    };
     this.handleDraw = this.handleDraw.bind(this);
     this.handleSyncData = this.handleSyncData.bind(this);
     this.onImageLoad = this.onImageLoad.bind(this);
@@ -122,11 +119,10 @@ class GLCanvas extends Component {
   }
 
   render () {
-    const { width, height,
+    const { width, height, pixelRatio,
       data, nbContentTextures, imagesToPreload, renderId, opaque, onLoad, onProgress, autoRedraw, eventsThrough, visibleContent, // eslint-disable-line
       ...rest
     } = this.props;
-    const { scale } = this.state;
     const styles = {
       width: width+"px",
       height: height+"px",
@@ -138,8 +134,8 @@ class GLCanvas extends Component {
       {...rest} // eslint-disable-line
       ref="render"
       style={styles}
-      width={width * scale}
-      height={height * scale}
+      width={width * pixelRatio}
+      height={height * pixelRatio}
     />;
   }
 
@@ -384,7 +380,7 @@ class GLCanvas extends Component {
     const gl = this.gl;
     const renderData = this._renderData;
     if (!gl || !renderData) return;
-    const {scale} = this.state;
+    const {pixelRatio} = this.props;
     const getFBO = this.getFBO;
     const buffer = this._buffer;
 
@@ -408,7 +404,7 @@ class GLCanvas extends Component {
       const debugNode = debugProbe ? { ...data, shaderInfos: extractShaderDebug(shader) } : {};
       let profileExclusive;
 
-      const w = width * scale, h = height * scale;
+      const w = width * pixelRatio, h = height * pixelRatio;
 
       // contextChildren are rendered BEFORE children and parent because are contextual to them
       debugNode.contextChildren = contextChildren.map(recDraw);
@@ -628,6 +624,7 @@ class GLCanvas extends Component {
 GLCanvas.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
+  pixelRatio: PropTypes.number.isRequired,
   data: PropTypes.object.isRequired,
   nbContentTextures: PropTypes.number.isRequired
 };
