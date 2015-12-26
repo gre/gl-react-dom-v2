@@ -1,3 +1,4 @@
+const Cache = require("./GLCanvasCache");
 const pointerEventsProperty = require("./pointerEventsProperty");
 
 const maxSizePool = 20;
@@ -26,6 +27,9 @@ function create (parentNode) {
       }
       if (pool.length < maxSizePool && pool.indexOf(poolObject) === -1)
         pool.push(poolObject);
+      else {
+        pool.cache.dispose();
+      }
     };
 
     let _w = -1, _h = -1, _s = -1;
@@ -50,7 +54,8 @@ function create (parentNode) {
       canvas,
       gl,
       dispose,
-      resize
+      resize,
+      cache: new Cache(gl)
     };
   }
 
