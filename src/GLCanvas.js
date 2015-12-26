@@ -14,6 +14,7 @@ const { Shaders } = require("gl-react");
 const GLImage = require("./GLImage");
 const vertShader = require("./static.vert");
 const pointerEventsProperty = require("./pointerEventsProperty");
+const canvasPool = require("./canvasPool");
 
 // .dispose() all objects that have disappeared from oldMap to newMap
 function diffDispose (newMap, oldMap) {
@@ -126,33 +127,49 @@ class GLCanvas extends Component {
       data, nbContentTextures, imagesToPreload, renderId, opaque, onLoad, onProgress, autoRedraw, eventsThrough, visibleContent, // eslint-disable-line
       ...rest
     } = this.props;
-    const { scale } = this.state;
     const styles = {
       width: width+"px",
       height: height+"px",
       [pointerEventsProperty]: eventsThrough ? "none" : "auto",
       position: "relative",
-      background: opaque ? "#000" : "transparent"
+      background: opaque ? "#000" : "transparent",
+      display: "inline-block"
     };
-    return <canvas
+    return <div
+      {...rest}
+      ref={ref => {
+        if (ref && !this._mountPoint) {
+          this.mount(this._mountPoint = ref);
+        }
+      }}
+      style={styles}
+    />;
+  /*
+  <canvas
       {...rest} // eslint-disable-line
       ref="render"
       style={styles}
       width={width * scale}
       height={height * scale}
     />;
+    */
   }
 
-  componentDidMount () {
+  componentWillUpdate () {
+    if (this.poolObject) {
+      const { width, height } = this.props;
+      const { scale } = this.state;
+      this.poolObject.resize(width, height, scale);
+    }
+  }
+
+  mount (container) {
     // Create the WebGL Context and init the rendering
-    const canvas = this.refs.render;
+    this.poolObject = canvasPool.create(container);
+    const { canvas, gl, resize } = this.poolObject;
+    resize(this.props.width, this.props.height, this.state.scale);
     this.canvas = canvas;
-    const opts = {};
-    const gl = (
-      canvas.getContext("webgl", opts) ||
-      canvas.getContext("webgl-experimental", opts) ||
-      canvas.getContext("experimental-webgl", opts)
-    );
+
     if (!gl) return;
     this.gl = gl;
 
@@ -177,6 +194,9 @@ class GLCanvas extends Component {
   }
 
   componentWillUnmount () {
+    if (this.poolObject) {
+      this.poolObject.dispose();
+    }
     // Destroy everything to avoid leaks.
     this._contentTextures.forEach(t => t.dispose());
     this._standaloneTextures.forEach(t => t.dispose());
@@ -592,7 +612,7 @@ class GLCanvas extends Component {
   getDrawingUniforms () {
     const {nbContentTextures} = this.props;
     if (nbContentTextures === 0) return [];
-    const children = this.refs.render.parentNode.children;
+    const children = this._mountPoint.parentNode.children;
     const all = [];
     for (var i = 0; i < nbContentTextures; i++) {
       all[i] = children[i].firstChild;
