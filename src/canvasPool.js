@@ -25,6 +25,9 @@ function create (parentNode) {
       if (canvas.parentNode) {
         canvas.parentNode.removeChild(canvas);
       }
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
       if (pool.length < maxSizePool && pool.indexOf(poolObject) === -1)
         pool.push(poolObject);
       else {
