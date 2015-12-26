@@ -75,7 +75,7 @@ class GLCanvas extends Component {
     }
     else {
       this._preloading = null;
-      if (this.props.onLoad) this.props.onLoad();
+      this._needToTriggerOnLoad = true;
     }
     this._autoredraw = this.props.autoRedraw;
   }
@@ -509,6 +509,11 @@ class GLCanvas extends Component {
       const frame = this.canvas.toDataURL();
       this._pendingCaptureFrame.resolve(frame);
       this._pendingCaptureFrame = undefined;
+    }
+
+    if (this._needToTriggerOnLoad) {
+      this._needToTriggerOnLoad = false;
+      if (this.props.onLoad) this.props.onLoad();
     }
   }
 
