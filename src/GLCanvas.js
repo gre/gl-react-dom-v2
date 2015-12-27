@@ -78,6 +78,7 @@ class GLCanvas extends Component {
       this._needToTriggerOnLoad = true;
     }
     this._autoredraw = this.props.autoRedraw;
+    this._pendingCaptureFrame = {};
   }
 
   componentWillUnmount () {
@@ -93,6 +94,10 @@ class GLCanvas extends Component {
     this.gl = null;
     this.cache = null;
     if (this._raf) raf.cancel(this._raf);
+    Object.keys(this._pendingCaptureFrame).forEach(key => {
+      this._pendingCaptureFrame[key].reject(new Error("GLCanvas is unmounting"));
+    });
+    this._pendingCaptureFrame = null;
   }
 
   componentWillReceiveProps (props) {
@@ -163,15 +168,70 @@ class GLCanvas extends Component {
     />;
   }
 
-  captureFrame (cb) {
-    const promise = (
-      this._pendingCaptureFrame || // use pending capture OR create a new captureFrame pending
-      (this._pendingCaptureFrame = defer())
-    ).promise;
-    if (typeof cb === "function") {
-      console.warn("GLSurface: callback parameter of captureFrame is deprecated, use the returned promise instead"); // eslint-disable-line no-console
-      promise.then(cb);
+  addPendingCaptureFrame (opts) {
+    const key = opts.format + ":" + opts.type + ":" + opts.quality;
+    return this._pendingCaptureFrame[key] || (
+      this._pendingCaptureFrame[key] = { ...defer(), opts }
+    );
+  }
+
+  _capture = ({ format, type, quality }) => {
+    const canvas = this.canvas;
+    try {
+      switch (format) {
+      case "base64": return Promise.resolve(canvas.toDataURL(type, quality));
+      case "blob": return new Promise(resolve => canvas.toBlob(resolve, type, quality));
+      default: invariant(false, "invalid capture format '%s'", format);
+      }
     }
+    catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  captureFrame (optsOrDeprecatedCb) {
+    let opts;
+    if (typeof optsOrDeprecatedCb === "function") {
+      console.warn("GLSurface: callback parameter of captureFrame is deprecated, use the returned promise instead"); // eslint-disable-line no-console
+      promise.then(optsOrDeprecatedCb);
+    }
+    else if (optsOrDeprecatedCb) {
+      invariant(typeof optsOrDeprecatedCb==="object", "captureFrame takes an object option in parameter");
+      let nb = 0;
+      if ("format" in optsOrDeprecatedCb) {
+        invariant(
+          typeof optsOrDeprecatedCb.format === "string",
+          "captureFrame({format}): format must be a string (e.g: 'base64', 'blob'), Got: '%s'",
+          optsOrDeprecatedCb.format);
+        nb ++;
+      }
+      if ("type" in optsOrDeprecatedCb) {
+        invariant(
+          typeof optsOrDeprecatedCb.type === "string",
+          "captureFrame({type}): type must be a string (e.g: 'png', 'jpg'), Got: '%s'",
+          optsOrDeprecatedCb.type);
+        nb ++;
+      }
+      if ("quality" in optsOrDeprecatedCb) {
+        invariant(
+          typeof optsOrDeprecatedCb.quality === "number" &&
+          optsOrDeprecatedCb.quality >= 0 &&
+          optsOrDeprecatedCb.quality <= 1,
+          "captureFrame({quality}): quality must be a number between 0 and 1, Got: '%s'",
+          optsOrDeprecatedCb.quality);
+        nb ++;
+      }
+      const keys = Object.keys(optsOrDeprecatedCb);
+      invariant(keys.length === nb, "captureFrame(opts): opts must be an object with {format, type, quality}, found some invalid keys in '%s'", keys);
+      opts = optsOrDeprecatedCb;
+    }
+    opts = {
+      format: "base64",
+      type: "png",
+      quality: 1,
+      ...opts
+    };
+    const promise = this.addPendingCaptureFrame(opts).promise;
     this.requestDraw();
     return promise;
   }
@@ -505,10 +565,14 @@ class GLCanvas extends Component {
       });
     }
 
-    if (this._pendingCaptureFrame) {
-      const frame = this.canvas.toDataURL();
-      this._pendingCaptureFrame.resolve(frame);
-      this._pendingCaptureFrame = undefined;
+    const _pendingCaptureFrame = this._pendingCaptureFrame;
+    const pendingCaptureFramePerOption = Object.keys(_pendingCaptureFrame);
+    if (pendingCaptureFramePerOption.length > 0) {
+      pendingCaptureFramePerOption.forEach(key => {
+        const {opts, resolve, reject} = _pendingCaptureFrame[key];
+        this._capture(opts).then(resolve, reject);
+      });
+      this._pendingCaptureFrame = {};
     }
 
     if (this._needToTriggerOnLoad) {
