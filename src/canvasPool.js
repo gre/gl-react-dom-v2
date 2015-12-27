@@ -1,16 +1,27 @@
 const Cache = require("./GLCanvasCache");
 const pointerEventsProperty = require("./pointerEventsProperty");
 
-const maxSizePool = 20;
+let maxSizePool = 20;
 const pool = [];
+
+function setSize (size) {
+  maxSizePool = size;
+  pool.splice(size).forEach(p => p.dispose(true));
+}
+
+function clear () {
+  pool.splice(0).forEach(p => p.dispose(true));
+}
 
 function create (parentNode) {
   let poolObject;
 
   if (pool.length > 0) {
-    poolObject = pool.splice(0, 1)[0];
+    // reuse most recently used canvas
+    poolObject = pool.splice(pool.length-1)[0];
   }
   else {
+    // create a new canvas / context
     const canvas = document.createElement("canvas");
     canvas.style[pointerEventsProperty] = "none";
 
@@ -21,17 +32,18 @@ function create (parentNode) {
       canvas.getContext("experimental-webgl", opts)
     );
 
-    const dispose = () => {
+    const dispose = dontReuse => {
       if (canvas.parentNode) {
         canvas.parentNode.removeChild(canvas);
       }
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      gl.clearColor(0.0, 0.0, 0.0, 0.0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      if (pool.length < maxSizePool && pool.indexOf(poolObject) === -1)
+      if (!dontReuse && pool.length < maxSizePool && pool.indexOf(poolObject) === -1) {
         pool.push(poolObject);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+      }
       else {
-        pool.cache.dispose();
+        poolObject.cache.dispose();
       }
     };
 
@@ -68,5 +80,7 @@ function create (parentNode) {
 }
 
 module.exports = {
-  create
+  create,
+  clear,
+  setSize
 };
