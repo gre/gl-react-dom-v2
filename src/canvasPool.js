@@ -36,7 +36,12 @@ function create (parentNode) {
       if (canvas.parentNode) {
         canvas.parentNode.removeChild(canvas);
       }
-      if (!dontReuse && pool.length < maxSizePool && pool.indexOf(poolObject) === -1) {
+      const reachPoolLimit = pool.length >= maxSizePool;
+      if (reachPoolLimit) {
+        console.warn( // eslint-disable-line no-console
+          `gl-react-dom: canvasPool of size ${maxSizePool} reached, you might want to increase pool size, use less concurrent WebGL Canvases or consider using gl-react-dom-static-container library`);
+      }
+      if (!dontReuse && !reachPoolLimit && pool.indexOf(poolObject) === -1) {
         pool.push(poolObject);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
