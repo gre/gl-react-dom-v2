@@ -16,11 +16,13 @@ const vertShader = require("./static.vert");
 const pointerEventsProperty = require("./pointerEventsProperty");
 const canvasPool = require("./canvasPool");
 
-// .dispose() all objects that have disappeared from oldMap to newMap
-function diffDispose (newMap, oldMap) {
+const disposeFunction = o => o.dispose();
+
+// call f(obj, key) on all objects that have disappeared from oldMap to newMap
+function diffCall (newMap, oldMap, f) {
   for (const o in oldMap) {
     if (!(o in newMap)) {
-      oldMap[o].dispose();
+      f(oldMap[o], o);
     }
   }
 }
@@ -67,9 +69,12 @@ class GLCanvas extends Component {
     this.state = {
       scale: window.devicePixelRatio
     };
+    this._drawCleanups = [];
   }
 
   componentWillUnmount () {
+    this._drawCleanups.forEach(f => f());
+    this._drawCleanups = null;
     if (this.poolObject) {
       this.poolObject.dispose();
     }
@@ -402,10 +407,16 @@ class GLCanvas extends Component {
 
     this._renderData = traverseTree(data);
 
+    diffCall(images, prevImages, (img, src) => {
+      const i = this._preloading.indexOf(src);
+      if (i !== -1) this._preloading.splice(i, 1);
+    });
     // Destroy previous states that have disappeared
-    diffDispose(shaders, prevShaders);
-    diffDispose(images, prevImages);
-    prevStandaloneTextures.forEach(t => t.dispose());
+    this.dispatchDrawCleanup(() => {
+      diffCall(shaders, prevShaders, disposeFunction);
+      diffCall(images, prevImages, disposeFunction);
+      prevStandaloneTextures.forEach(disposeFunction);
+    });
 
     this.cache._shaders = shaders;
     this.cache._images = images;
@@ -416,6 +427,10 @@ class GLCanvas extends Component {
     }
     this._needsSyncData = false;
     this.requestDraw();
+  }
+
+  dispatchDrawCleanup (f) {
+    this._drawCleanups.push(f);
   }
 
   draw () {
@@ -552,6 +567,11 @@ class GLCanvas extends Component {
     gl.enable(gl.BLEND);
     const debugTree = recDraw(renderData);
     gl.disable(gl.BLEND);
+
+    if (this._drawCleanups.length > 0) {
+      this._drawCleanups.forEach(f => f());
+      this._drawCleanups = [];
+    }
 
     if (debugProbe) {
       if (this.allocatedFromPool) {
