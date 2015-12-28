@@ -595,7 +595,7 @@ class GLCanvas extends Component {
       this._pendingCaptureFrame = {};
     }
 
-    if (this._triggerOnLoad && this.getRemainingToPreload().length === 0) {
+    if (this._triggerOnLoad && !this.haveRemainingToPreload()) {
       this._triggerOnLoad = false;
       if (this.props.onLoad) {
         this.props.onLoad();
@@ -603,12 +603,13 @@ class GLCanvas extends Component {
     }
   }
 
-  getRemainingToPreload = () => {
-    return this.props.imagesToPreload.map(imageObjectToId).filter(id => this._preloading.indexOf(id) === -1);
+  haveRemainingToPreload = () => {
+    return this.props.imagesToPreload
+      .some(o => this._preloading.indexOf(imageObjectToId(o)) === -1);
   }
 
   onImageLoad = loadedObj => {
-    if (this.getRemainingToPreload().length > 0) {
+    if (this.haveRemainingToPreload()) {
       this._preloading.push(loadedObj);
       const {imagesToPreload, onProgress} = this.props;
       const loaded = countPreloaded(this._preloading, imagesToPreload);
@@ -692,7 +693,7 @@ class GLCanvas extends Component {
   handleDraw = () => {
     if (!this._needsDraw) return;
     this._needsDraw = false;
-    if (this.getRemainingToPreload().length > 0) return;
+    if (this.haveRemainingToPreload()) return;
     this.draw();
   }
 }
