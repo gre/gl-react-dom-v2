@@ -116,8 +116,7 @@ class GLCanvas extends Component {
 
   componentDidUpdate () {
     // Synchronize the rendering (after render is done)
-    const { data, imagesToPreload } = this.props;
-    this.syncData(data, imagesToPreload);
+    this.syncData(this.props.data);
   }
 
   mount (container) {
@@ -128,7 +127,7 @@ class GLCanvas extends Component {
     resize(this.props.width, this.props.height, this.state.scale);
     this.canvas = canvas;
 
-    this._triggerOnLoad = true;
+    this._dirtyOnLoad = true;
     this._preloading = Object.keys(this.cache._images);
     this._autoredraw = this.props.autoRedraw;
     this._pendingCaptureFrame = {};
@@ -137,7 +136,7 @@ class GLCanvas extends Component {
     this.gl = gl;
 
     this.resizeUniformContentTextures(this.props.nbContentTextures);
-    this.syncData(this.props.data, this.props.imagesToPreload);
+    this.syncData(this.props.data);
 
     this.checkAutoRedraw();
   }
@@ -282,7 +281,7 @@ class GLCanvas extends Component {
     }
   }
 
-  syncData (data, imagesToPreload) {
+  syncData (data) {
     // Synchronize the data props that contains every data needed for render
     const gl = this.gl;
     if (!gl) return;
@@ -300,7 +299,6 @@ class GLCanvas extends Component {
     const shaders = {}; // shaders cache (per Shader ID)
     const images = {}; // images cache (per src)
     const standaloneTextures = [];
-    let hasNewImageToPreload = false;
 
     // traverseTree compute renderData from the data.
     // frameIndex is the framebuffer index of a node. (root is -1)
@@ -370,9 +368,6 @@ class GLCanvas extends Component {
               image = images[src] = prevImages[src];
             }
             else {
-              if (!hasNewImageToPreload && imagesToPreload.find(o => imageObjectToId(o) === src)) {
-                hasNewImageToPreload = true;
-              }
               image = new GLImage(gl, onImageLoad);
               images[src] = image;
             }
@@ -422,9 +417,6 @@ class GLCanvas extends Component {
     this.cache._images = images;
     this.cache._standaloneTextures = standaloneTextures;
 
-    if (hasNewImageToPreload) {
-      this._triggerOnLoad = true;
-    }
     this._needsSyncData = false;
     this.requestDraw();
   }
@@ -595,8 +587,8 @@ class GLCanvas extends Component {
       this._pendingCaptureFrame = {};
     }
 
-    if (this._triggerOnLoad && !this.haveRemainingToPreload()) {
-      this._triggerOnLoad = false;
+    if (this._dirtyOnLoad && !this.haveRemainingToPreload()) {
+      this._dirtyOnLoad = false;
       if (this.props.onLoad) {
         this.props.onLoad();
       }
@@ -609,24 +601,17 @@ class GLCanvas extends Component {
   }
 
   onImageLoad = loadedObj => {
-    if (this.haveRemainingToPreload()) {
-      this._preloading.push(loadedObj);
-      const {imagesToPreload, onProgress} = this.props;
-      const loaded = countPreloaded(this._preloading, imagesToPreload);
-      const total = imagesToPreload.length;
-      if (onProgress) onProgress({
-        progress: loaded / total,
-        loaded,
-        total
-      });
-      if (loaded == total) {
-        this.requestSyncData();
-      }
-    }
-    else {
-      // Any texture image load will trigger a future re-sync of data (if no preloaded)
-      this.requestSyncData();
-    }
+    this._preloading.push(loadedObj);
+    const {imagesToPreload, onProgress} = this.props;
+    const loaded = countPreloaded(this._preloading, imagesToPreload);
+    const total = imagesToPreload.length;
+    if (onProgress) onProgress({
+      progress: loaded / total,
+      loaded,
+      total
+    });
+    this._dirtyOnLoad = true;
+    this.requestSyncData();
   }
 
   // Resize the pool of textures for the contentTextures
@@ -681,7 +666,7 @@ class GLCanvas extends Component {
 
   handleSyncData = () => {
     if (!this._needsSyncData) return;
-    this.syncData(this.props.data, this.props.imagesToPreload);
+    this.syncData(this.props.data);
   }
 
   requestDraw () {
