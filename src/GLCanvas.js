@@ -14,12 +14,15 @@ const { Shaders } = require("gl-react");
 const GLImage = require("./GLImage");
 const vertShader = require("./static.vert");
 const pointerEventsProperty = require("./pointerEventsProperty");
+const canvasPool = require("./canvasPool");
 
-// .dispose() all objects that have disappeared from oldMap to newMap
-function diffDispose (newMap, oldMap) {
+const disposeFunction = o => o.dispose();
+
+// call f(obj, key) on all objects that have disappeared from oldMap to newMap
+function diffCall (newMap, oldMap, f) {
   for (const o in oldMap) {
     if (!(o in newMap)) {
-      oldMap[o].dispose();
+      f(oldMap[o], o);
     }
   }
 }
@@ -49,6 +52,16 @@ function extractShaderDebug (shader) {
   return { types: { uniforms } };
 }
 
+function defer() {
+  const deferred = {};
+  const promise = new Promise(function(resolve, reject) {
+    deferred.resolve = resolve;
+    deferred.reject  = reject;
+  });
+  deferred.promise = promise;
+  return deferred;
+}
+
 class GLCanvas extends Component {
 
   constructor (props) {
@@ -56,31 +69,169 @@ class GLCanvas extends Component {
     this.state = {
       scale: window.devicePixelRatio
     };
-    this.handleDraw = this.handleDraw.bind(this);
-    this.handleSyncData = this.handleSyncData.bind(this);
-    this.onImageLoad = this.onImageLoad.bind(this);
-    this.getFBO = this.getFBO.bind(this);
-
-    this._images = {};
-    this._shaders = {};
-    this._fbos = {};
-    this._contentTextures = [];
-    this._standaloneTextures = [];
-    if (props.imagesToPreload.length > 0) {
-      this._preloading = [];
-    }
-    else {
-      this._preloading = null;
-      if (this.props.onLoad) this.props.onLoad();
-    }
-    this._autoredraw = this.props.autoRedraw;
-
-    this._captureListeners = [];
+    this._drawCleanups = [];
   }
 
-  captureFrame (cb) {
-    this._captureListeners.push(cb);
+  componentWillUnmount () {
+    this._drawCleanups.forEach(f => f());
+    this._drawCleanups = null;
+    if (this.poolObject) {
+      this.poolObject.dispose();
+    }
+    if (this.allocatedFromPool) {
+      this.allocatedFromPool.forEach(pool.freeUint8);
+    }
+    this.setDebugProbe(null);
+    this._mountPoint = null;
+    this.canvas = null;
+    this.gl = null;
+    this.cache = null;
+    if (this._raf) raf.cancel(this._raf);
+    Object.keys(this._pendingCaptureFrame).forEach(key => {
+      this._pendingCaptureFrame[key].reject(new Error("GLCanvas is unmounting"));
+    });
+    this._pendingCaptureFrame = null;
+  }
+
+  componentWillReceiveProps (props) {
+    // react on props changes only for things we can't pre-compute
+    const devicePixelRatio = window.devicePixelRatio;
+    if (this.state.devicePixelRatio !== devicePixelRatio) {
+      this.setState({ devicePixelRatio });
+    }
+    if (props.nbContentTextures !== this.props.nbContentTextures)
+      this.resizeUniformContentTextures(props.nbContentTextures);
+
+    this._autoredraw = props.autoRedraw;
+    this.checkAutoRedraw();
+  }
+
+  componentWillUpdate () {
+    if (this.poolObject) {
+      const { width, height } = this.props;
+      const { scale } = this.state;
+      this.poolObject.resize(width, height, scale);
+    }
+  }
+
+  componentDidUpdate () {
+    // Synchronize the rendering (after render is done)
+    const { data, imagesToPreload } = this.props;
+    this.syncData(data, imagesToPreload);
+  }
+
+  mount (container) {
+    // Create the WebGL Context and init the rendering
+    this.poolObject = canvasPool.create(container);
+    this.cache = this.poolObject.cache;
+    const { canvas, gl, resize } = this.poolObject;
+    resize(this.props.width, this.props.height, this.state.scale);
+    this.canvas = canvas;
+
+    this._triggerOnLoad = true;
+    this._preloading = Object.keys(this.cache._images);
+    this._autoredraw = this.props.autoRedraw;
+    this._pendingCaptureFrame = {};
+
+    if (!gl) return;
+    this.gl = gl;
+
+    this.resizeUniformContentTextures(this.props.nbContentTextures);
+    this.syncData(this.props.data, this.props.imagesToPreload);
+
+    this.checkAutoRedraw();
+  }
+
+  render () {
+    const { width, height,
+      data, nbContentTextures, imagesToPreload, renderId, opaque, onLoad, onProgress, autoRedraw, eventsThrough, visibleContent, // eslint-disable-line
+      ...rest
+    } = this.props;
+    const styles = {
+      width: width+"px",
+      height: height+"px",
+      [pointerEventsProperty]: eventsThrough ? "none" : "auto",
+      position: "relative",
+      background: opaque ? "#000" : "transparent",
+      display: "inline-block"
+    };
+    return <div
+      {...rest}
+      ref={ref => {
+        if (ref && !this._mountPoint) {
+          this.mount(this._mountPoint = ref);
+        }
+      }}
+      style={styles}
+    />;
+  }
+
+  addPendingCaptureFrame (opts) {
+    const key = opts.format + ":" + opts.type + ":" + opts.quality;
+    return this._pendingCaptureFrame[key] || (
+      this._pendingCaptureFrame[key] = { ...defer(), opts }
+    );
+  }
+
+  _capture = ({ format, type, quality }) => {
+    const canvas = this.canvas;
+    try {
+      switch (format) {
+      case "base64": return Promise.resolve(canvas.toDataURL(type, quality));
+      case "blob": return new Promise(resolve => canvas.toBlob(resolve, type, quality));
+      default: invariant(false, "invalid capture format '%s'", format);
+      }
+    }
+    catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  captureFrame (optsOrDeprecatedCb) {
+    let opts;
+    if (typeof optsOrDeprecatedCb === "function") {
+      console.warn("GLSurface: callback parameter of captureFrame is deprecated, use the returned promise instead"); // eslint-disable-line no-console
+      promise.then(optsOrDeprecatedCb);
+    }
+    else if (optsOrDeprecatedCb) {
+      invariant(typeof optsOrDeprecatedCb==="object", "captureFrame takes an object option in parameter");
+      let nb = 0;
+      if ("format" in optsOrDeprecatedCb) {
+        invariant(
+          typeof optsOrDeprecatedCb.format === "string",
+          "captureFrame({format}): format must be a string (e.g: 'base64', 'blob'), Got: '%s'",
+          optsOrDeprecatedCb.format);
+        nb ++;
+      }
+      if ("type" in optsOrDeprecatedCb) {
+        invariant(
+          typeof optsOrDeprecatedCb.type === "string",
+          "captureFrame({type}): type must be a string (e.g: 'png', 'jpg'), Got: '%s'",
+          optsOrDeprecatedCb.type);
+        nb ++;
+      }
+      if ("quality" in optsOrDeprecatedCb) {
+        invariant(
+          typeof optsOrDeprecatedCb.quality === "number" &&
+          optsOrDeprecatedCb.quality >= 0 &&
+          optsOrDeprecatedCb.quality <= 1,
+          "captureFrame({quality}): quality must be a number between 0 and 1, Got: '%s'",
+          optsOrDeprecatedCb.quality);
+        nb ++;
+      }
+      const keys = Object.keys(optsOrDeprecatedCb);
+      invariant(keys.length === nb, "captureFrame(opts): opts must be an object with {format, type, quality}, found some invalid keys in '%s'", keys);
+      opts = optsOrDeprecatedCb;
+    }
+    opts = {
+      format: "base64",
+      type: "png",
+      quality: 1,
+      ...opts
+    };
+    const promise = this.addPendingCaptureFrame(opts).promise;
     this.requestDraw();
+    return promise;
   }
 
   setDebugProbe (params) {
@@ -105,104 +256,6 @@ class GLCanvas extends Component {
     }
   }
 
-  render () {
-    const { width, height,
-      data, nbContentTextures, imagesToPreload, renderId, opaque, onLoad, onProgress, autoRedraw, eventsThrough, visibleContent, // eslint-disable-line
-      ...rest
-    } = this.props;
-    const { scale } = this.state;
-    const styles = {
-      width: width+"px",
-      height: height+"px",
-      [pointerEventsProperty]: eventsThrough ? "none" : "auto",
-      position: "relative",
-      background: opaque ? "#000" : "transparent"
-    };
-    return <canvas
-      {...rest} // eslint-disable-line
-      ref="render"
-      style={styles}
-      width={width * scale}
-      height={height * scale}
-    />;
-  }
-
-  componentDidMount () {
-    // Create the WebGL Context and init the rendering
-    const canvas = this.refs.render;
-    this.canvas = canvas;
-    const opts = {};
-    const gl = (
-      canvas.getContext("webgl", opts) ||
-      canvas.getContext("webgl-experimental", opts) ||
-      canvas.getContext("experimental-webgl", opts)
-    );
-    if (!gl) return;
-    this.gl = gl;
-
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-    const buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      -1.0, -1.0,
-      1.0, -1.0,
-      -1.0,  1.0,
-      -1.0,  1.0,
-      1.0, -1.0,
-      1.0,  1.0
-    ]), gl.STATIC_DRAW);
-    this._buffer = buffer;
-
-    this.resizeUniformContentTextures(this.props.nbContentTextures);
-    this.syncData(this.props.data);
-
-    this.checkAutoRedraw();
-  }
-
-  componentWillUnmount () {
-    // Destroy everything to avoid leaks.
-    this._contentTextures.forEach(t => t.dispose());
-    this._standaloneTextures.forEach(t => t.dispose());
-    [
-      this._shaders,
-      this._images,
-      this._fbos
-    ].forEach(coll => {
-      for (const k in coll) {
-        coll[k].dispose();
-        delete coll[k];
-      }
-    });
-    if (this.allocatedFromPool) {
-      this.allocatedFromPool.forEach(pool.freeUint8);
-    }
-    this.setDebugProbe(null);
-    if (this.gl) this.gl.deleteBuffer(this._buffer);
-    this.shader = null;
-    this.gl = null;
-    if (this._raf) raf.cancel(this._raf);
-  }
-
-  componentWillReceiveProps (props) {
-    // react on props changes only for things we can't pre-compute
-    const devicePixelRatio = window.devicePixelRatio;
-    if (this.state.devicePixelRatio !== devicePixelRatio) {
-      this.setState({ devicePixelRatio });
-    }
-    if (props.nbContentTextures !== this.props.nbContentTextures)
-      this.resizeUniformContentTextures(props.nbContentTextures);
-
-    this._autoredraw = props.autoRedraw;
-    this.checkAutoRedraw();
-  }
-
-  componentDidUpdate () {
-    // Synchronize the rendering (after render is done)
-    const { data } = this.props;
-    this.syncData(data);
-  }
-
   checkAutoRedraw () {
     if (!this._autoredraw || this._raf) return;
     const loop = () => {
@@ -216,8 +269,8 @@ class GLCanvas extends Component {
     this._raf = raf(loop);
   }
 
-  getFBO (id) {
-    const fbos = this._fbos; // pool of FBOs
+  getFBO = id => {
+    const fbos = this.cache._fbos; // pool of FBOs
     invariant(id>=0, "fbo id must be a positive integer");
     if (id in fbos) {
       return fbos[id]; // re-use existing FBO from pool
@@ -229,24 +282,25 @@ class GLCanvas extends Component {
     }
   }
 
-  syncData (data) {
+  syncData (data, imagesToPreload) {
     // Synchronize the data props that contains every data needed for render
     const gl = this.gl;
     if (!gl) return;
 
     const onImageLoad = this.onImageLoad;
-    const contentTextures = this._contentTextures;
+    const contentTextures = this.cache._contentTextures;
     const getFBO = this.getFBO;
 
     // old values
-    const prevShaders = this._shaders;
-    const prevImages = this._images;
-    const prevStandaloneTextures = this._standaloneTextures;
+    const prevShaders = this.cache._shaders;
+    const prevImages = this.cache._images;
+    const prevStandaloneTextures = this.cache._standaloneTextures;
 
     // new values (mutated from traverseTree)
     const shaders = {}; // shaders cache (per Shader ID)
     const images = {}; // images cache (per src)
     const standaloneTextures = [];
+    let hasNewImageToPreload = false;
 
     // traverseTree compute renderData from the data.
     // frameIndex is the framebuffer index of a node. (root is -1)
@@ -316,6 +370,9 @@ class GLCanvas extends Component {
               image = images[src] = prevImages[src];
             }
             else {
+              if (!hasNewImageToPreload && imagesToPreload.find(o => imageObjectToId(o) === src)) {
+                hasNewImageToPreload = true;
+              }
               image = new GLImage(gl, onImageLoad);
               images[src] = image;
             }
@@ -350,17 +407,30 @@ class GLCanvas extends Component {
 
     this._renderData = traverseTree(data);
 
+    diffCall(images, prevImages, (img, src) => {
+      const i = this._preloading.indexOf(src);
+      if (i !== -1) this._preloading.splice(i, 1);
+    });
     // Destroy previous states that have disappeared
-    diffDispose(shaders, prevShaders);
-    diffDispose(images, prevImages);
-    prevStandaloneTextures.forEach(t => t.dispose());
+    this.dispatchDrawCleanup(() => {
+      diffCall(shaders, prevShaders, disposeFunction);
+      diffCall(images, prevImages, disposeFunction);
+      prevStandaloneTextures.forEach(disposeFunction);
+    });
 
-    this._shaders = shaders;
-    this._images = images;
-    this._standaloneTextures = standaloneTextures;
+    this.cache._shaders = shaders;
+    this.cache._images = images;
+    this.cache._standaloneTextures = standaloneTextures;
 
+    if (hasNewImageToPreload) {
+      this._triggerOnLoad = true;
+    }
     this._needsSyncData = false;
     this.requestDraw();
+  }
+
+  dispatchDrawCleanup (f) {
+    this._drawCleanups.push(f);
   }
 
   draw () {
@@ -370,7 +440,7 @@ class GLCanvas extends Component {
     if (!gl || !renderData) return;
     const {scale} = this.state;
     const getFBO = this.getFBO;
-    const buffer = this._buffer;
+    const buffer = this.cache._buffer;
 
     const allocatedFromPool = [];
     const debugProbe = this._debugProbe;
@@ -468,7 +538,7 @@ class GLCanvas extends Component {
 
     // Draw the content to contentTextures (assuming they ALWAYS change and need a re-draw)
     const contents = this.getDrawingUniforms();
-    const contentTextures = this._contentTextures;
+    const contentTextures = this.cache._contentTextures;
     const debugContents = contents.map((content, i) => {
       let profile;
       if (shouldProfile) {
@@ -498,6 +568,11 @@ class GLCanvas extends Component {
     const debugTree = recDraw(renderData);
     gl.disable(gl.BLEND);
 
+    if (this._drawCleanups.length > 0) {
+      this._drawCleanups.forEach(f => f());
+      this._drawCleanups = [];
+    }
+
     if (debugProbe) {
       if (this.allocatedFromPool) {
         this.allocatedFromPool.forEach(pool.freeUint8);
@@ -510,17 +585,32 @@ class GLCanvas extends Component {
       });
     }
 
-    if (this._captureListeners.length > 0) {
-      const frame = this.canvas.toDataURL();
-      this._captureListeners.forEach(listener => listener(frame));
-      this._captureListeners = [];
+    const _pendingCaptureFrame = this._pendingCaptureFrame;
+    const pendingCaptureFramePerOption = Object.keys(_pendingCaptureFrame);
+    if (pendingCaptureFramePerOption.length > 0) {
+      pendingCaptureFramePerOption.forEach(key => {
+        const {opts, resolve, reject} = _pendingCaptureFrame[key];
+        this._capture(opts).then(resolve, reject);
+      });
+      this._pendingCaptureFrame = {};
+    }
+
+    if (this._triggerOnLoad && this.getRemainingToPreload().length === 0) {
+      this._triggerOnLoad = false;
+      if (this.props.onLoad) {
+        this.props.onLoad();
+      }
     }
   }
 
-  onImageLoad (loadedObj) {
-    if (this._preloading) {
+  getRemainingToPreload = () => {
+    return this.props.imagesToPreload.map(imageObjectToId).filter(id => this._preloading.indexOf(id) === -1);
+  }
+
+  onImageLoad = loadedObj => {
+    if (this.getRemainingToPreload().length > 0) {
       this._preloading.push(loadedObj);
-      const {imagesToPreload, onLoad, onProgress} = this.props;
+      const {imagesToPreload, onProgress} = this.props;
       const loaded = countPreloaded(this._preloading, imagesToPreload);
       const total = imagesToPreload.length;
       if (onProgress) onProgress({
@@ -529,9 +619,7 @@ class GLCanvas extends Component {
         total
       });
       if (loaded == total) {
-        this._preloading = null;
         this.requestSyncData();
-        if (onLoad) onLoad();
       }
     }
     else {
@@ -543,7 +631,7 @@ class GLCanvas extends Component {
   // Resize the pool of textures for the contentTextures
   resizeUniformContentTextures (n) {
     const gl = this.gl;
-    const contentTextures = this._contentTextures;
+    const contentTextures = this.cache._contentTextures;
     const length = contentTextures.length;
     if (length === n) return;
     if (n < length) {
@@ -576,7 +664,7 @@ class GLCanvas extends Component {
   getDrawingUniforms () {
     const {nbContentTextures} = this.props;
     if (nbContentTextures === 0) return [];
-    const children = this.refs.render.parentNode.children;
+    const children = this._mountPoint.parentNode.children;
     const all = [];
     for (var i = 0; i < nbContentTextures; i++) {
       all[i] = children[i].firstChild;
@@ -590,9 +678,9 @@ class GLCanvas extends Component {
     raf(this.handleSyncData);
   }
 
-  handleSyncData () {
+  handleSyncData = () => {
     if (!this._needsSyncData) return;
-    this.syncData(this.props.data);
+    this.syncData(this.props.data, this.props.imagesToPreload);
   }
 
   requestDraw () {
@@ -601,10 +689,10 @@ class GLCanvas extends Component {
     raf(this.handleDraw);
   }
 
-  handleDraw () {
+  handleDraw = () => {
     if (!this._needsDraw) return;
     this._needsDraw = false;
-    if (this._preloading) return;
+    if (this.getRemainingToPreload().length > 0) return;
     this.draw();
   }
 }
