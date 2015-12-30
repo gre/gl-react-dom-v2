@@ -125,7 +125,7 @@ class Demo extends React.Component {
         onMouseUp={this.onMouseUp}
         onMouseLeave={this.onMouseLeave}>
         { offset[0]===0 && offset[1]===0 && <span style={styles.dragHelp}>Try to drag this area</span>}
-        <Surface width={w} height={h}>
+        <Surface width={w} height={h} preload onLoad={() => console.log("onLoad")} onProgress={p => console.log("onProgress", p)}>
           <Mix
             factor={mix}
             map={mixMap}

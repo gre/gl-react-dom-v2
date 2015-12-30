@@ -6,7 +6,10 @@ class Transition extends React.Component {
   render () {
     const { width, height, shader, progress, from, to, uniforms } = this.props;
     const scale = window.devicePixelRatio;
-    return <Surface width={width} height={height} opaque={false}>
+    return <Surface width={width} height={height} opaque={false}
+      preload
+      onLoad={() => console.log("Transition onLoad")}
+      onProgress={p => console.log("Transition onProgress", p)}>
       <GL.Node
         shader={shader}
         uniforms={{

@@ -62,7 +62,15 @@ class Vignette extends React.Component {
   render () {
     const { width, height, time, source } = this.props;
     const { finger } = this.state;
-    return <Surface ref="view" width={width} height={height} opaque={false} onMouseMove={this.onMouseMove}>
+    return <Surface
+      ref="view"
+      width={width}
+      height={height}
+      opaque={false}
+      onMouseMove={this.onMouseMove}
+      onLoad={() => console.log("Vignette onLoad")}
+      onProgress={p => console.log("Vignette onProgress", p)}
+      preload>
       <GL.Node
         shader={shaders.imageVignette}
         uniforms={{

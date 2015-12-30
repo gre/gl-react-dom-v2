@@ -39,7 +39,9 @@ class Intro extends React.Component {
   render () {
     const { time, fps, width, height } = this.props;
     const w = (width-20)/3;
-    return <GLSurface width={width} height={height} opaque={false}>
+    return <GLSurface width={width} height={height} opaque={false}
+      onLoad={() => console.log("Intro onLoad")}
+      onProgress={p => console.log("Intro onProgress", p)}>
       <GL.Node
         shader={shaders.drunkEffect}
         uniforms={{
@@ -48,7 +50,8 @@ class Intro extends React.Component {
           amp: 0.05 - 0.03 * Math.cos(time / 4),
           colorSeparation: 0.02,
           moving: 1
-        }}>
+        }}
+        preload>
         <GL.Uniform name="texture">
           <Surface width={width} height={height} left={0} top={0} enableCSSLayout>
             <Group style={{ width: width, height: height, flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
