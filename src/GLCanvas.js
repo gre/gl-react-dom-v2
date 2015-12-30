@@ -286,7 +286,16 @@ class GLCanvas extends Component {
     // traverseTree compute renderData from the data.
     // frameIndex is the framebuffer index of a node. (root is -1)
     function traverseTree (data) {
-      const { shader: s, uniforms: dataUniforms, children: dataChildren, contextChildren: dataContextChildren, width, height, fboId } = data;
+      const {
+        shader: s,
+        uniforms: dataUniforms,
+        children: dataChildren,
+        contextChildren: dataContextChildren,
+        width,
+        height,
+        pixelRatio,
+        fboId
+      } = data;
 
       const contextChildren = dataContextChildren.map(traverseTree);
 
@@ -380,7 +389,7 @@ class GLCanvas extends Component {
       const notProvided = Object.keys(shader.uniforms).filter(u => !(u in uniforms));
       invariant(notProvided.length===0, "Shader '%s': All defined uniforms must be provided. Missing: '"+notProvided.join("', '")+"'", shader.name);
 
-      return { shader, uniforms, textures, children, contextChildren, width, height, fboId, data };
+      return { shader, uniforms, textures, children, contextChildren, width, height, pixelRatio, fboId, data };
     }
 
     this._renderData = traverseTree(data);
