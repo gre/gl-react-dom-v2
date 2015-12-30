@@ -112,10 +112,6 @@ class GLCanvas extends Component {
 
   componentWillReceiveProps (props) {
     // react on props changes only for things we can't pre-compute
-    const devicePixelRatio = window.devicePixelRatio;
-    if (this.state.devicePixelRatio !== devicePixelRatio) {
-      this.setState({ devicePixelRatio });
-    }
     if (props.nbContentTextures !== this.props.nbContentTextures)
       this._resizeUniformContentTextures(props.nbContentTextures);
 
