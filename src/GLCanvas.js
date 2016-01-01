@@ -155,41 +155,37 @@ class GLCanvas extends Component {
 
   // Exposed methods
 
-  captureFrame (optsOrDeprecatedCb) {
+  captureFrame (config) {
     let opts;
-    if (typeof optsOrDeprecatedCb === "function") {
-      console.warn("GLSurface: callback parameter of captureFrame is deprecated, use the returned promise instead"); // eslint-disable-line no-console
-      promise.then(optsOrDeprecatedCb);
-    }
-    else if (optsOrDeprecatedCb) {
-      invariant(typeof optsOrDeprecatedCb==="object", "captureFrame takes an object option in parameter");
+    if (config) {
+      invariant(typeof config==="object", "captureFrame takes an object option in parameter");
       let nb = 0;
-      if ("format" in optsOrDeprecatedCb) {
+      if ("format" in config) {
         invariant(
-          typeof optsOrDeprecatedCb.format === "string",
+          typeof config.format === "string",
           "captureFrame({format}): format must be a string (e.g: 'base64', 'blob'), Got: '%s'",
-          optsOrDeprecatedCb.format);
+          config.format);
         nb ++;
       }
-      if ("type" in optsOrDeprecatedCb) {
+      if ("type" in config) {
         invariant(
-          typeof optsOrDeprecatedCb.type === "string",
+          typeof config.type === "string",
           "captureFrame({type}): type must be a string (e.g: 'png', 'jpg'), Got: '%s'",
-          optsOrDeprecatedCb.type);
+          config.type);
         nb ++;
       }
-      if ("quality" in optsOrDeprecatedCb) {
+      if ("quality" in config) {
         invariant(
-          typeof optsOrDeprecatedCb.quality === "number" &&
-          optsOrDeprecatedCb.quality >= 0 &&
-          optsOrDeprecatedCb.quality <= 1,
+          typeof config.quality === "number" &&
+          config.quality >= 0 &&
+          config.quality <= 1,
           "captureFrame({quality}): quality must be a number between 0 and 1, Got: '%s'",
-          optsOrDeprecatedCb.quality);
+          config.quality);
         nb ++;
       }
-      const keys = Object.keys(optsOrDeprecatedCb);
+      const keys = Object.keys(config);
       invariant(keys.length === nb, "captureFrame(opts): opts must be an object with {format, type, quality}, found some invalid keys in '%s'", keys);
-      opts = optsOrDeprecatedCb;
+      opts = config;
     }
     opts = {
       format: "base64",
