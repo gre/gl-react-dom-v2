@@ -1,5 +1,6 @@
 const Cache = require("./GLCanvasCache");
 const pointerEventsProperty = require("./pointerEventsProperty");
+const getContext = require("./getContext");
 
 let maxSizePool = 20;
 const pool = [];
@@ -26,11 +27,7 @@ function create (parentNode) {
     canvas.style[pointerEventsProperty] = "none";
 
     const opts = {};
-    const gl = (
-      canvas.getContext("webgl", opts) ||
-      canvas.getContext("webgl-experimental", opts) ||
-      canvas.getContext("experimental-webgl", opts)
-    );
+    const gl = getContext(canvas, opts);
 
     const dispose = dontReuse => {
       if (canvas.parentNode) {
