@@ -23,10 +23,10 @@
   },
   "dependencies": {
     "gl-react-dom": "file:../..",
-    "gl-react": "^2.0.0",
+    "gl-react": "^2.1.0",
     "ndarray": "^1.0.18",
-    "react": "^0.14.0",
-    "react-dom": "^0.14.0",
+    "react": "^0.14.5",
+    "react-dom": "^0.14.5",
     "react-canvas": "gre/react-canvas#react-0.14"
   }
 }

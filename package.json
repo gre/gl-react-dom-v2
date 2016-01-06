@@ -33,6 +33,7 @@
   },
   "keywords": [
     "react",
+    "react-component",
     "gl",
     "webgl",
     "stackgl"

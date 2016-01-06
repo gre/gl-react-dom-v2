@@ -24,10 +24,10 @@
   },
   "dependencies": {
     "gl-react-dom": "file:../..",
-    "gl-react": "^2.0.0",
+    "gl-react": "^2.1.0",
     "glsl-fast-gaussian-blur": "^1.0.2",
     "glslify": "^2.3.1",
-    "react": "^0.14.0",
-    "react-dom": "^0.14.0"
+    "react": "^0.14.5",
+    "react-dom": "^0.14.5"
   }
 }
