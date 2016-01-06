@@ -29,6 +29,8 @@ function create (parentNode) {
     const opts = {};
     const gl = getContext(canvas, opts);
 
+    if (!gl) return null;
+
     const dispose = dontReuse => {
       if (canvas.parentNode) {
         canvas.parentNode.removeChild(canvas);

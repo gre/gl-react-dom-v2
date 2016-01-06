@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "gl-fbo": "2.0.5",
-    "gl-shader": "gre/gl-shader",
+    "gl-shader": "4.2.0",
     "gl-texture2d": "2.0.10",
     "invariant": "2.2.0",
     "performance-now": "0.2.0",

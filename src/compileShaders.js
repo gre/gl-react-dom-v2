@@ -7,7 +7,7 @@ const mockCanvas = document.createElement("canvas");
 const mockGl = getContext(mockCanvas, {});
 
 const checkCompiles = o => {
-  if (!mockGl) return; // we skip validation when webgl is not supported
+  if (!mockGl) throw new Error("WebGL context unavailable"); // we skip validation when webgl is not supported
   const shader = createShader(mockGl, vertexCode, o.frag);
   const {uniforms} = shader.types;
   shader.dispose();

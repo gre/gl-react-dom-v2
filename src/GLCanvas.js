@@ -70,6 +70,7 @@ class GLCanvas extends Component {
     this._drawCleanups = [];
     // Create the WebGL Context and init the rendering
     this._poolObject = canvasPool.create(container);
+    if (!this._poolObject) return;
     this._cache = this._poolObject.cache;
     const { canvas, gl, resize } = this._poolObject;
     resize(this.props.width, this.props.height, this.props.pixelRatio);
@@ -80,7 +81,6 @@ class GLCanvas extends Component {
     this._autoredraw = this.props.autoRedraw;
     this._pendingCaptureFrame = {};
 
-    if (!gl) return;
     this._gl = gl;
 
     this._resizeUniformContentTextures(this.props.nbContentTextures);
