@@ -664,7 +664,14 @@ class GLCanvas extends Component {
   _handleDraw = () => {
     delete this._rafDraw;
     if (this._needsSyncData) {
-      this._syncData(this.props.data);
+      try {
+        this._syncData(this.props.data);
+      }
+      catch (e) {
+        if (!("rawError" in e)) { // Duck-typing on gl-shader error. can be improved
+          throw e;
+        }
+      }
     }
     if (!this._haveRemainingToPreload()) {
       this._draw();

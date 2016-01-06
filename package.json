@@ -9,16 +9,13 @@
   },
   "devDependencies": {
     "babel-cli": "^6.3.13",
-    "babel-eslint": "^4.1.6",
     "babel-preset-es2015": "^6.1.18",
     "babel-preset-react": "^6.1.18",
-    "babel-preset-stage-1": "^6.1.18",
-    "eslint": "^1.2.0",
-    "eslint-plugin-react": "^3.2.3"
+    "babel-preset-stage-1": "^6.1.18"
   },
   "peerDependencies": {
-    "react": ">=0.14.0 <0.15.0",
-    "gl-react": ">=2.0.3 <2.1.0"
+    "react": "^0.14.5",
+    "gl-react": "^2.1.0"
   },
   "dependencies": {
     "gl-fbo": "2.0.5",
