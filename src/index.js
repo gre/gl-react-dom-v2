@@ -1,7 +1,5 @@
 
-if (process.env.NODE_ENV !== "production") {
-  require("./debugShaders");
-}
+require("./compileShaders");
 
 const Surface = require("./Surface");
 const canvasPool = require("./canvasPool");
