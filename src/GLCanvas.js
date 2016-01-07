@@ -66,12 +66,26 @@ class GLCanvas extends Component {
 
   // Life-cycle methods
 
-  constructor (props) {
-    super(props);
-    this.state = {
-      scale: window.devicePixelRatio
-    };
+  _mount (container) {
     this._drawCleanups = [];
+    // Create the WebGL Context and init the rendering
+    this._poolObject = canvasPool.create(container);
+    if (!this._poolObject) return;
+    this._cache = this._poolObject.cache;
+    const { canvas, gl, resize } = this._poolObject;
+    resize(this.props.width, this.props.height, this.props.pixelRatio);
+    this._canvas = canvas;
+
+    this._dirtyOnLoad = true;
+    this._preloading = Object.keys(this._cache._images);
+    this._autoredraw = this.props.autoRedraw;
+    this._pendingCaptureFrame = {};
+
+    this._gl = gl;
+
+    this._resizeUniformContentTextures(this.props.nbContentTextures);
+    this._requestSyncData();
+    this._syncAutoRedraw();
   }
 
   componentWillUnmount () {
@@ -98,10 +112,6 @@ class GLCanvas extends Component {
 
   componentWillReceiveProps (props) {
     // react on props changes only for things we can't pre-compute
-    const devicePixelRatio = window.devicePixelRatio;
-    if (this.state.devicePixelRatio !== devicePixelRatio) {
-      this.setState({ devicePixelRatio });
-    }
     if (props.nbContentTextures !== this.props.nbContentTextures)
       this._resizeUniformContentTextures(props.nbContentTextures);
 
@@ -114,35 +124,13 @@ class GLCanvas extends Component {
 
   componentWillUpdate () {
     if (this._poolObject) {
-      const { width, height } = this.props;
-      const { scale } = this.state;
-      this._poolObject.resize(width, height, scale);
+      const { width, height, pixelRatio } = this.props;
+      this._poolObject.resize(width, height, pixelRatio);
     }
   }
 
-  _mount (container) {
-    // Create the WebGL Context and init the rendering
-    this._poolObject = canvasPool.create(container);
-    this._cache = this._poolObject.cache;
-    const { canvas, gl, resize } = this._poolObject;
-    resize(this.props.width, this.props.height, this.state.scale);
-    this._canvas = canvas;
-
-    this._dirtyOnLoad = true;
-    this._preloading = Object.keys(this._cache._images);
-    this._autoredraw = this.props.autoRedraw;
-    this._pendingCaptureFrame = {};
-
-    if (!gl) return;
-    this._gl = gl;
-
-    this._resizeUniformContentTextures(this.props.nbContentTextures);
-    this._requestSyncData();
-    this._syncAutoRedraw();
-  }
-
   render () {
-    const { width, height,
+    const { width, height, pixelRatio,
       data, nbContentTextures, imagesToPreload, renderId, opaque, onLoad, onProgress, autoRedraw, eventsThrough, visibleContent, // eslint-disable-line
       ...rest
     } = this.props;
@@ -167,41 +155,37 @@ class GLCanvas extends Component {
 
   // Exposed methods
 
-  captureFrame (optsOrDeprecatedCb) {
+  captureFrame (config) {
     let opts;
-    if (typeof optsOrDeprecatedCb === "function") {
-      console.warn("GLSurface: callback parameter of captureFrame is deprecated, use the returned promise instead"); // eslint-disable-line no-console
-      promise.then(optsOrDeprecatedCb);
-    }
-    else if (optsOrDeprecatedCb) {
-      invariant(typeof optsOrDeprecatedCb==="object", "captureFrame takes an object option in parameter");
+    if (config) {
+      invariant(typeof config==="object", "captureFrame takes an object option in parameter");
       let nb = 0;
-      if ("format" in optsOrDeprecatedCb) {
+      if ("format" in config) {
         invariant(
-          typeof optsOrDeprecatedCb.format === "string",
+          typeof config.format === "string",
           "captureFrame({format}): format must be a string (e.g: 'base64', 'blob'), Got: '%s'",
-          optsOrDeprecatedCb.format);
+          config.format);
         nb ++;
       }
-      if ("type" in optsOrDeprecatedCb) {
+      if ("type" in config) {
         invariant(
-          typeof optsOrDeprecatedCb.type === "string",
+          typeof config.type === "string",
           "captureFrame({type}): type must be a string (e.g: 'png', 'jpg'), Got: '%s'",
-          optsOrDeprecatedCb.type);
+          config.type);
         nb ++;
       }
-      if ("quality" in optsOrDeprecatedCb) {
+      if ("quality" in config) {
         invariant(
-          typeof optsOrDeprecatedCb.quality === "number" &&
-          optsOrDeprecatedCb.quality >= 0 &&
-          optsOrDeprecatedCb.quality <= 1,
+          typeof config.quality === "number" &&
+          config.quality >= 0 &&
+          config.quality <= 1,
           "captureFrame({quality}): quality must be a number between 0 and 1, Got: '%s'",
-          optsOrDeprecatedCb.quality);
+          config.quality);
         nb ++;
       }
-      const keys = Object.keys(optsOrDeprecatedCb);
+      const keys = Object.keys(config);
       invariant(keys.length === nb, "captureFrame(opts): opts must be an object with {format, type, quality}, found some invalid keys in '%s'", keys);
-      opts = optsOrDeprecatedCb;
+      opts = config;
     }
     opts = {
       format: "base64",
@@ -294,7 +278,16 @@ class GLCanvas extends Component {
     // traverseTree compute renderData from the data.
     // frameIndex is the framebuffer index of a node. (root is -1)
     function traverseTree (data) {
-      const { shader: s, uniforms: dataUniforms, children: dataChildren, contextChildren: dataContextChildren, width, height, fboId } = data;
+      const {
+        shader: s,
+        uniforms: dataUniforms,
+        children: dataChildren,
+        contextChildren: dataContextChildren,
+        width,
+        height,
+        pixelRatio,
+        fboId
+      } = data;
 
       const contextChildren = dataContextChildren.map(traverseTree);
 
@@ -388,7 +381,7 @@ class GLCanvas extends Component {
       const notProvided = Object.keys(shader.uniforms).filter(u => !(u in uniforms));
       invariant(notProvided.length===0, "Shader '%s': All defined uniforms must be provided. Missing: '"+notProvided.join("', '")+"'", shader.name);
 
-      return { shader, uniforms, textures, children, contextChildren, width, height, fboId, data };
+      return { shader, uniforms, textures, children, contextChildren, width, height, pixelRatio, fboId, data };
     }
 
     this._renderData = traverseTree(data);
@@ -420,7 +413,6 @@ class GLCanvas extends Component {
     const gl = this._gl;
     const renderData = this._renderData;
     if (!gl || !renderData) return;
-    const {scale} = this.state;
     const _getFBO = this._getFBO;
     const buffer = this._cache._buffer;
 
@@ -439,12 +431,12 @@ class GLCanvas extends Component {
     }
 
     function recDraw (renderData) {
-      const { shader, uniforms, textures, children, contextChildren, width, height, fboId, data } = renderData;
+      const { shader, uniforms, textures, children, contextChildren, width, height, pixelRatio, fboId, data } = renderData;
 
       const debugNode = debugProbe ? { ...data, shaderInfos: extractShaderDebug(shader) } : {};
       let profileExclusive;
 
-      const w = width * scale, h = height * scale;
+      const w = width * pixelRatio, h = height * pixelRatio;
 
       // contextChildren are rendered BEFORE children and parent because are contextual to them
       debugNode.contextChildren = contextChildren.map(recDraw);
@@ -672,7 +664,14 @@ class GLCanvas extends Component {
   _handleDraw = () => {
     delete this._rafDraw;
     if (this._needsSyncData) {
-      this._syncData(this.props.data);
+      try {
+        this._syncData(this.props.data);
+      }
+      catch (e) {
+        if (!("rawError" in e)) { // Duck-typing on gl-shader error. can be improved
+          throw e;
+        }
+      }
     }
     if (!this._haveRemainingToPreload()) {
       this._draw();
@@ -683,6 +682,7 @@ class GLCanvas extends Component {
 GLCanvas.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
+  pixelRatio: PropTypes.number.isRequired,
   data: PropTypes.object.isRequired,
   nbContentTextures: PropTypes.number.isRequired
 };

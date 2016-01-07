@@ -1,4 +1,4 @@
-require("gl-react/react");
+
 const React = require("react");
 const ReactDOM = require("react-dom");
 const AdvancedEffects = require("./src");
