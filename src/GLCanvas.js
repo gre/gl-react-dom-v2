@@ -66,6 +66,11 @@ class GLCanvas extends Component {
 
   // Life-cycle methods
 
+  constructor (props) {
+    super(props);
+    this._data = props.data;
+  }
+
   _mount (container) {
     this._drawCleanups = [];
     // Create the WebGL Context and init the rendering
@@ -115,8 +120,10 @@ class GLCanvas extends Component {
     if (props.nbContentTextures !== this.props.nbContentTextures)
       this._resizeUniformContentTextures(props.nbContentTextures);
 
-    if (props.data !== this.props.data)
+    if (props.data !== this.props.data) {
+      this._data = props.data;
       this._requestSyncData();
+    }
 
     this._autoredraw = props.autoRedraw;
     this._syncAutoRedraw();
@@ -217,6 +224,13 @@ class GLCanvas extends Component {
         lastCapture: 0
       };
       this._requestDraw();
+    }
+  }
+
+  setNativeProps (props) {
+    if ("data" in props && props.data !== this._data) {
+      this._data = props.data;
+      this._requestSyncData();
     }
   }
 
@@ -665,7 +679,7 @@ class GLCanvas extends Component {
     delete this._rafDraw;
     if (this._needsSyncData) {
       try {
-        this._syncData(this.props.data);
+        this._syncData(this._data);
       }
       catch (e) {
         if (!("rawError" in e)) { // Duck-typing on gl-shader error. can be improved
