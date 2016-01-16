@@ -1,4 +1,5 @@
 const invariant = require("invariant");
+const defer = require("promise-defer");
 const React = require("react");
 const {
   Component,
@@ -50,16 +51,6 @@ function countPreloaded (loaded, toLoad) {
 function extractShaderDebug (shader) {
   const { types: { uniforms } } = shader;
   return { types: { uniforms } };
-}
-
-function defer () {
-  const deferred = {};
-  const promise = new Promise((resolve, reject) => {
-    deferred.resolve = resolve;
-    deferred.reject  = reject;
-  });
-  deferred.promise = promise;
-  return deferred;
 }
 
 class GLCanvas extends Component {

@@ -23,6 +23,7 @@
     "gl-texture2d": "2.0.10",
     "invariant": "2.2.0",
     "performance-now": "0.2.0",
+    "promise-defer": "1.0.0",
     "raf": "3.1.0",
     "typedarray-pool": "1.1.0",
     "vendor-prefix": "0.1.0"
