@@ -259,7 +259,7 @@ class GLCanvas extends Component {
       fbos[id] = fbo;
       return fbo;
     }
-  }
+  };
 
   _syncData (data) {
     // Synchronize the data props that contains every data needed for render
@@ -598,7 +598,7 @@ class GLCanvas extends Component {
     });
     this._dirtyOnLoad = true;
     this._requestSyncData();
-  }
+  };
 
   _resizeUniformContentTextures (n) { // Resize the pool of textures for the contentTextures
     const gl = this._gl;
@@ -681,7 +681,7 @@ class GLCanvas extends Component {
     if (!this._haveRemainingToPreload()) {
       this._draw();
     }
-  }
+  };
 }
 
 GLCanvas.propTypes = {
