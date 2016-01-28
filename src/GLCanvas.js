@@ -267,6 +267,9 @@ class GLCanvas extends Component {
     }
     else {
       const fbo = createFBO(this._gl, [ 2, 2 ]);
+      fbo.color[0].minFilter =
+      fbo.color[0].magFilter =
+        this._gl.LINEAR;
       fbos[id] = fbo;
       return fbo;
     }
