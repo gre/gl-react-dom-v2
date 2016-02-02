@@ -225,6 +225,10 @@ class GLCanvas extends Component {
     }
   }
 
+  requestDraw () {
+    this._requestDraw();
+  }
+
   // Private methods
 
   _addPendingCaptureFrame (opts) {
