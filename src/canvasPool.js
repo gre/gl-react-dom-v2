@@ -25,6 +25,8 @@ function create (parentNode) {
     // create a new canvas / context
     const canvas = document.createElement("canvas");
     canvas.style[pointerEventsProperty] = "none";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
 
     const opts = {};
     const gl = getContext(canvas, opts);
@@ -60,12 +62,10 @@ function create (parentNode) {
       if (w !== _w || scaleChanged) {
         _w = w;
         canvas.width = scale * w;
-        canvas.style.width = w+"px";
       }
       if (h !== _h || scaleChanged) {
         _h = h;
         canvas.height = scale * h;
-        canvas.style.height = h+"px";
       }
     };
 

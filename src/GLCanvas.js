@@ -69,7 +69,8 @@ class GLCanvas extends Component {
     if (!this._poolObject) return;
     this._cache = this._poolObject.cache;
     const { canvas, gl, resize } = this._poolObject;
-    resize(this.props.width, this.props.height, this.props.pixelRatio);
+    const { data } = this.props;
+    if (data) resize(data.width, data.height, data.pixelRatio);
     this._canvas = canvas;
 
     this._dirtyOnLoad = true;
@@ -122,8 +123,8 @@ class GLCanvas extends Component {
 
   componentWillUpdate () {
     if (this._poolObject) {
-      const { width, height, pixelRatio } = this.props;
-      this._poolObject.resize(width, height, pixelRatio);
+      const { data } = this.props;
+      if (data) this._poolObject.resize(data.width, data.height, data.pixelRatio);
     }
   }
 

@@ -46,7 +46,7 @@ class Demo extends React.Component {
 
     const txt =
       <Surface width={800} height={800} top={0} left={0}>
-        {[0,1,2,3].map(i => <Text style={{
+        {[0,1,2,3].map(i => <Text key={i} style={{
           top: 40+200*i,
           left: 0,
           width: 800,
@@ -260,6 +260,10 @@ class Demo extends React.Component {
             </Layer>
           </GLSurface>
         </NativeLayer>
+
+        <GLSurface width={debugSize} height={debugSize}>
+          <HelloGL width={2} height={2} pixelRatio={1} />
+        </GLSurface>
 
       </div>
     </div>;
