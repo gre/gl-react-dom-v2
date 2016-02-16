@@ -39,7 +39,7 @@ class Intro extends React.Component {
   render () {
     const { time, fps, width, height } = this.props;
     const w = (width-20)/3;
-    return <GLSurface width={width} height={height} opaque={false}
+    return <GLSurface width={width} height={height} backgroundColor="transparent"
       onLoad={() => console.log("Intro onLoad")}
       onProgress={p => console.log("Intro onProgress", p)}>
       <GL.Node

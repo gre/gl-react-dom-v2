@@ -99,7 +99,7 @@ class Simple extends React.Component {
 
         <div style={styles.demo}>
           <h2 style={styles.demoTitle}>4. Progress Indicator</h2>
-          <Surface width={256} height={180} opaque={false}>
+          <Surface width={256} height={180} backgroundColor="transparent">
             <PieProgress progress={progress} width={256} height={180} />
           </Surface>
           <Slider
@@ -144,7 +144,7 @@ class Simple extends React.Component {
 
         <div style={styles.demo}>
           <h2 style={styles.demoTitle}>9. Texture from array</h2>
-          <Surface width={256} height={190} opaque={false}>
+          <Surface width={256} height={190} backgroundColor="transparent">
             <Colorify
               colorScale={colorScales[colorScale]}
               disableLinearInterpolation={disableLinearInterpolation}>

@@ -124,7 +124,7 @@ class Demo extends React.Component {
 
         <NativeLayer width={debugSize} height={debugSize}>
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
-          <GLSurface width={debugSize} height={debugSize} opaque={false}>
+          <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
             <Copy last>
               http://i.imgur.com/mp79p5T.png
             </Copy>
@@ -133,7 +133,7 @@ class Demo extends React.Component {
 
         <NativeLayer width={debugSize} height={debugSize}>
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
-          <GLSurface width={debugSize} height={debugSize} opaque={false}>
+          <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
             <Copy last>
               <Copy>
                 http://i.imgur.com/mp79p5T.png
@@ -144,7 +144,7 @@ class Demo extends React.Component {
 
         <NativeLayer width={debugSize} height={debugSize}>
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
-          <GLSurface width={debugSize} height={debugSize} opaque={false}>
+          <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
             <Copy last>
               <Copy>
                 <Copy>
@@ -157,7 +157,7 @@ class Demo extends React.Component {
 
         <NativeLayer width={debugSize} height={debugSize}>
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
-          <GLSurface width={debugSize} height={debugSize} opaque={false}>
+          <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
             <Copy last>
               <Copy>
                 <Copy>
@@ -172,7 +172,7 @@ class Demo extends React.Component {
 
         <NativeLayer width={debugSize} height={debugSize}>
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
-          <GLSurface width={debugSize} height={debugSize} opaque={false}>
+          <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
             <Copy last>
               <Copy>
                 <Copy>
@@ -191,7 +191,7 @@ class Demo extends React.Component {
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
           <NativeLayer>
             <img src="http://i.imgur.com/mp79p5T.png" width={debugSize} height={debugSize} />
-            <GLSurface width={debugSize} height={debugSize} opaque={false}>
+            <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
               <TransparentNonPremultiplied>
                 <HelloGL />
               </TransparentNonPremultiplied>
@@ -203,7 +203,7 @@ class Demo extends React.Component {
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
           <NativeLayer>
             <img src="http://i.imgur.com/mp79p5T.png" width={debugSize} height={debugSize} />
-            <GLSurface width={debugSize} height={debugSize} opaque={false}>
+            <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
               <TransparentNonPremultiplied>
                 <TransparentNonPremultiplied>
                   <HelloGL />
@@ -217,7 +217,7 @@ class Demo extends React.Component {
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
           <NativeLayer>
             <img src="http://i.imgur.com/mp79p5T.png" width={debugSize} height={debugSize} />
-            <GLSurface width={debugSize} height={debugSize} opaque={false}>
+            <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
               <TransparentNonPremultiplied>
                 <Copy>
                   <TransparentNonPremultiplied>
@@ -233,7 +233,7 @@ class Demo extends React.Component {
 
         <NativeLayer width={debugSize} height={debugSize}>
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
-          <GLSurface width={debugSize} height={debugSize} opaque={false}>
+          <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
             <Layer>
               http://i.imgur.com/mp79p5T.png
               <TransparentNonPremultiplied>
@@ -245,7 +245,7 @@ class Demo extends React.Component {
 
         <NativeLayer width={debugSize} height={debugSize}>
           <img src="http://i.imgur.com/S22HNaU.png" width={debugSize} height={debugSize} />
-          <GLSurface width={debugSize} height={debugSize} opaque={false}>
+          <GLSurface width={debugSize} height={debugSize} backgroundColor="transparent">
             <Layer>
               http://i.imgur.com/mp79p5T.png
               <TransparentNonPremultiplied>

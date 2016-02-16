@@ -129,16 +129,16 @@ class GLCanvas extends Component {
   }
 
   render () {
-    const { width, height, pixelRatio,
-      data, nbContentTextures, imagesToPreload, renderId, opaque, onLoad, onProgress, autoRedraw, eventsThrough, visibleContent, // eslint-disable-line
+    const { width, height, pixelRatio, style,
+      data, nbContentTextures, imagesToPreload, renderId, onLoad, onProgress, autoRedraw, eventsThrough, visibleContent, // eslint-disable-line
       ...rest
     } = this.props;
     const styles = {
+      ...style,
       width: width+"px",
       height: height+"px",
       [pointerEventsProperty]: eventsThrough ? "none" : "auto",
       position: "relative",
-      background: opaque ? "#000" : "transparent",
       display: "inline-block"
     };
     return <div

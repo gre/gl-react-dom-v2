@@ -28,7 +28,7 @@ void main( void ) {
 class Banner extends React.Component {
   render () {
     const { width, height, time } = this.props;
-    return <Surface width={width} height={height} opaque={false}
+    return <Surface width={width} height={height} backgroundColor="transparent"
       onLoad={() => console.log("Banner onLoad")}
       onProgress={p => console.log("Banner onProgress", p)}>
       <GL.Node

@@ -66,7 +66,7 @@ class Vignette extends React.Component {
       ref="view"
       width={width}
       height={height}
-      opaque={false}
+      backgroundColor="transparent"
       onMouseMove={this.onMouseMove}
       onLoad={() => console.log("Vignette onLoad")}
       onProgress={p => console.log("Vignette onProgress", p)}
