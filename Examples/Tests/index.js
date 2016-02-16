@@ -18,7 +18,7 @@ const ndarray = require("ndarray");
 /* eslint-disable no-console */
 
 GL.Shaders.list().map(id => {
-  console.log(`Shader '${GL.Shaders.getName(id)}' -> ${id}`);
+  console.log(`Shader '${GL.Shaders.get(id).name}' -> ${id}`);
 });
 
 class Demo extends React.Component {

@@ -14,13 +14,14 @@ const checkCompiles = o => {
   return {uniforms};
 };
 
-Shaders.on("add", (id, shader, onCompile) => {
-  try {
-    const res = checkCompiles(shader);
-    if (onCompile) onCompile(null, res);
-  }
-  catch (e) {
-    if (onCompile) onCompile(e.rawError || e.message);
-    else throw e;
-  }
+Shaders.setImplementation({
+  add: (id, shader) => Promise.resolve().then(() => {
+    try {
+      return checkCompiles(shader);
+    }
+    catch (e) {
+      throw e.rawError || e.message;
+    }
+  }),
+  remove: ()=>{}
 });

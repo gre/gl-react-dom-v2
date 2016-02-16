@@ -466,12 +466,14 @@ class GLCanvas extends Component {
         // special case for root FBO
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, w, h);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       }
       else {
         // Use the framebuffer of the node
         fbo = _getFBO(fboId);
         syncShape(fbo, [ w, h ]);
         fbo.bind();
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       }
 
       // Prepare the shader/buffer
@@ -489,7 +491,6 @@ class GLCanvas extends Component {
       }
 
       // Render
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.clearColor(0.0, 0.0, 0.0, 0.0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
