@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "gl-react-dom": "file:../..",
-    "gl-react": "^2.1.0",
+    "gl-react": "^2.2.0",
     "react": "^0.14.5",
     "react-dom": "^0.14.5"
   }

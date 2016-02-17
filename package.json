@@ -15,7 +15,7 @@
   },
   "peerDependencies": {
     "react": "^0.14.5",
-    "gl-react": "^2.1.0"
+    "gl-react": "^2.2.0"
   },
   "dependencies": {
     "gl-fbo": "2.0.5",
