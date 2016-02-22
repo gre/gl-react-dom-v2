@@ -17,6 +17,9 @@ const vertShader = require("./static.vert");
 const pointerEventsProperty = require("./pointerEventsProperty");
 const canvasPool = require("./canvasPool");
 
+const WEBGL_CONTEXT_LOST = "webglcontextlost";
+const WEBGL_CONTEXT_RESTORED = "webglcontextrestored";
+
 const disposeFunction = o => o.dispose();
 
 // call f(obj, key) on all objects that have disappeared from oldMap to newMap
@@ -80,15 +83,38 @@ class GLCanvas extends Component {
 
     this._gl = gl;
 
+    canvas.addEventListener(WEBGL_CONTEXT_LOST, this._onContextLost);
+    canvas.addEventListener(WEBGL_CONTEXT_RESTORED, this._onContextRestored);
+
     this._resizeUniformContentTextures(this.props.nbContentTextures);
     this._requestSyncData();
     this._syncAutoRedraw();
   }
 
+  _onContextLost = e => {
+    e.preventDefault();
+    this._gl = null;
+    const { onContextLost } = this.props;
+    if (onContextLost) onContextLost();
+  };
+
+  _onContextRestored = () => {
+    if (this._poolObject) {
+      this._poolObject.dispose();
+    }
+    this._mountPoint = null;
+    this.forceUpdate();
+    const { onContextRestored } = this.props;
+    if (onContextRestored) onContextRestored();
+  };
+
   componentWillUnmount () {
     this._drawCleanups.forEach(f => f());
     this._drawCleanups = null;
     if (this._poolObject) {
+      const { canvas } = this._poolObject;
+      canvas.removeEventListener(WEBGL_CONTEXT_LOST, this._onContextLost);
+      canvas.removeEventListener(WEBGL_CONTEXT_RESTORED, this._onContextRestored);
       this._poolObject.dispose();
     }
     if (this._allocatedFromPool) {
@@ -691,6 +717,8 @@ class GLCanvas extends Component {
       this._draw();
     }
   };
+
+
 }
 
 GLCanvas.propTypes = {
