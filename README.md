@@ -6,7 +6,7 @@ WebGL bindings for React DOM to implement complex effects over images and conten
 
 **`gl-react-dom` is an implementation of `gl-react` for `react-dom`. Please [read the main gl-react README](https://github.com/ProjectSeptemberInc/gl-react/) for more information.**
 
-[![](https://github.com/ProjectSeptemberInc/gl-react/raw/master/docs/examples/blur.gif)](http://projectseptemberinc.github.io/gl-react/Examples/Blur/)
+[![](https://github.com/ProjectSeptemberInc/gl-react/raw/master/docs/examples/blur.gif)](http://projectseptemberinc.github.io/gl-react-dom/Examples/Blur/)
 
 ## Documentation
 
