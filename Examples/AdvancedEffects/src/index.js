@@ -1,6 +1,6 @@
 const React = require("react");
 const Banner = require("./Banner");
-const Intro = require("./Intro");
+//const Intro = require("./Intro");
 const Vignette = require("./Vignette");
 const Slideshow = require("./Slideshow");
 
@@ -59,12 +59,15 @@ class AdvancedEffects extends React.Component {
           height={viewportH - introH - imgH - transitionH}
         />
 
+      {/*
         <Intro
           time={time}
           fps={frames/time}
           width={viewportW}
           height={introH}
         />
+        */}
+
 
         <Vignette
           time={time}

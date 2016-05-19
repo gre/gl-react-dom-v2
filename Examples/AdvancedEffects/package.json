@@ -25,8 +25,7 @@
     "gl-react-dom": "file:../..",
     "gl-react": "^2.2.0",
     "glsl-transitions": "^2015.8.19",
-    "react": "^0.14.5",
-    "react-dom": "^0.14.5",
-    "react-canvas": "gre/react-canvas#react-0.14"
+    "react": "^15.0.0",
+    "react-dom": "^15.0.0"
   }
 }

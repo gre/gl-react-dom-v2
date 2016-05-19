@@ -11,7 +11,7 @@ const OneFingerResponse = require("./OneFingerResponse");
 const AnimatedHelloGL = require("./AnimatedHelloGL");
 const Colorify = require("./Colorify");
 const Blur = require("./Blur");
-const ReactCanvasContentExample = require("./ReactCanvasContentExample");
+//const ReactCanvasContentExample = require("./ReactCanvasContentExample");
 const colorScales = require("./colorScales");
 
 class Simple extends React.Component {
@@ -80,11 +80,15 @@ class Simple extends React.Component {
 
         <div style={styles.demo}>
           <h2 style={styles.demoTitle}>3. Hue Rotate on a Canvas</h2>
+
+          {/*
           <Surface width={256} height={180} autoRedraw>
             <HueRotate hue={hue}>
               <ReactCanvasContentExample width={256} height={180} text={text} />
             </HueRotate>
           </Surface>
+          */}
+          <span>disabled until react-canvas is replaced</span>
           <Slider
             maximumValue={2 * Math.PI}
             value={hue}

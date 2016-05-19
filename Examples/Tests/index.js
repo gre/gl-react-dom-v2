@@ -10,7 +10,6 @@ const HelloGL = require("./HelloGL");
 const Display2 = require("./Display2");
 const Copy = require("./Copy");
 const TransparentNonPremultiplied = require("./TransparentNonPremultiplied");
-const { Surface, Text } = require("react-canvas");
 const GL = require("gl-react");
 const { Surface: GLSurface } = require("gl-react-dom");
 const ndarray = require("ndarray");
@@ -44,6 +43,7 @@ class Demo extends React.Component {
     const helloGL =
       <HelloGL width={64} height={64} />;
 
+      /*
     const txt =
       <Surface width={800} height={800} top={0} left={0}>
         {[0,1,2,3].map(i => <Text key={i} style={{
@@ -58,6 +58,7 @@ class Demo extends React.Component {
           Hello World {i}
         </Text>)}
       </Surface>;
+      */
 
     const img =
       "http://i.imgur.com/zJIxPEo.jpg";
@@ -66,14 +67,16 @@ class Demo extends React.Component {
       <Blur factor={4} passes={6} width={200} height={200}>
         {img}
       </Blur>;
-
+    /*
     const blurredImageOverText =
       <Layer>
         {blurredImage}
         {txt}
       </Layer>;
+      */
 
     return <div>
+      {/*
       <GLSurface width={600} height={600} preload onLoad={this.onLoad} onProgress={this.onProgress}>
         <Display2>
         <Add width={300} height={300}>
@@ -91,6 +94,7 @@ class Demo extends React.Component {
         </Display2>
       </Display2>
     </GLSurface>
+    */}
     <GLSurface width={100} height={200}>
       <Display2 vertical>
         <Display2 width={100} height={100} vertical>

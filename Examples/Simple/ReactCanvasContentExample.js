@@ -1,5 +1,4 @@
 const React = require("react");
-const { Surface, Image, Text } = require("react-canvas");
 
 const styles = {
 

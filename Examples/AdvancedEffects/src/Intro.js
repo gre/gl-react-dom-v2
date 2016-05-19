@@ -1,7 +1,6 @@
 const React = require("react");
 const GL = require("gl-react");
 const { Surface: GLSurface } = require("gl-react-dom");
-const {Surface,Layer,Text,Group} = require("react-canvas");
 
 const shaders = GL.Shaders.create({
   drunkEffect: {
