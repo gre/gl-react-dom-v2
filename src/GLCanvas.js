@@ -155,8 +155,8 @@ class GLCanvas extends Component {
   }
 
   render () {
-    const { width, height, pixelRatio, style,
-      data, nbContentTextures, imagesToPreload, renderId, onLoad, onProgress, autoRedraw, eventsThrough, visibleContent, // eslint-disable-line
+    const { width, height,
+      pixelRatio, style, data, nbContentTextures, imagesToPreload, renderId, onLoad, onProgress, autoRedraw, eventsThrough, visibleContent, // eslint-disable-line
       ...rest
     } = this.props;
     const styles = {
@@ -375,12 +375,13 @@ class GLCanvas extends Component {
             textures[uniformName] = contentTextures[value.id];
             break;
 
-          case "fbo": // framebuffers are a children rendering
+          case "fbo": { // framebuffers are a children rendering
             const fbo = _getFBO(value.id);
             textures[uniformName] = fbo.color[0];
             break;
+          }
 
-          case "uri":
+          case "uri": {
             const src = value.uri;
             invariant(src && typeof src === "string", "Shader '%s': An image src is defined for uniform '%s'", shader.name, uniformName);
             let image;
@@ -397,8 +398,9 @@ class GLCanvas extends Component {
             image.src = src; // Always set the image src. GLImage internally won't do anything if it doesn't change
             textures[uniformName] = image.getTexture(); // GLImage will compute and cache a gl-texture2d instance
             break;
+          }
 
-          case "ndarray":
+          case "ndarray": {
             const tex = createTexture(gl, value.ndarray);
             const opts = value.opts || {}; // TODO: in next releases we will generalize opts to more types.
             if (!opts.disableLinearInterpolation)
@@ -406,6 +408,7 @@ class GLCanvas extends Component {
             textures[uniformName] = tex;
             standaloneTextures.push(tex);
             break;
+          }
 
           default:
             invariant(false, "Shader '%s': invalid uniform '%s' value of type '%s'", shader.name, uniformName, value.type);
@@ -519,7 +522,7 @@ class GLCanvas extends Component {
       // Render
       gl.clearColor(0.0, 0.0, 0.0, 0.0);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
 
 
       if (shouldProfile) {
