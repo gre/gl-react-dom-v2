@@ -10,22 +10,22 @@
     ]
   },
   "scripts": {
-    "start": "budo index.js:bundle.js | garnish",
+    "start": "budo index.js:bundle.js",
     "build": "export NODE_ENV=production; browserify index.js | envify | uglifyjs -cm > bundle.js"
   },
   "devDependencies": {
     "babelify": "^7.2.0",
-    "browserify": "^12.0.1",
-    "budo": "^4.1.0",
+    "browserify": "^13.0.1",
+    "budo": "^8.3.0",
     "envify": "^3.4.0",
-    "garnish": "^2.2.2",
-    "uglify-js": "^2.4.24"
+    "uglify-js": "^2.6.4"
   },
   "dependencies": {
-    "gl-react-dom": "file:../..",
     "gl-react": "^2.2.0",
+    "gl-react-dom": "file:../..",
     "ndarray": "^1.0.18",
-    "react": "^15.0.0",
-    "react-dom": "^15.0.0"
+    "react": "^15.2.0",
+    "react-dom": "^15.2.0",
+    "react-slide2d": "0.0.1"
   }
 }
