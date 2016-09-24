@@ -4,7 +4,7 @@
   "description": "WebGL bindings for react to implement complex effects over images and content, in the descriptive VDOM paradigm",
   "main": "lib/index.js",
   "scripts": {
-    "compile": "rm -rf lib/ && babel --source-maps -d lib src && browserify lib/index.js --standalone GL > gl-react-dom.js",
+    "compile": "rm -rf lib/ && babel --source-maps -d lib src && browserify lib/index.js --standalone GLReactDOM > gl-react-dom.js",
     "prepublish": "npm run compile"
   },
   "devDependencies": {
