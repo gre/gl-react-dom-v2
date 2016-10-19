@@ -2,7 +2,9 @@ const createTexture = require("gl-texture2d");
 
 function loadImage (src, success, failure) {
   var img = new window.Image();
-  img.crossOrigin = true;
+  if (src.slice(0,5) !== "data:") {
+    img.crossOrigin = true;
+  }
   img.onload = function () {
     success(img);
   };
