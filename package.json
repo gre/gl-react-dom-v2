@@ -20,7 +20,7 @@
     "browserify-shim": "^3.8.12"
   },
   "peerDependencies": {
-    "react": "^0.14.5 || ^15.0.0",
+    "react": "*",
     "gl-react": "^2.2.0"
   },
   "dependencies": {
