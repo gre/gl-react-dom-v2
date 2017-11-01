@@ -31,6 +31,7 @@
     "invariant": "2.2.1",
     "performance-now": "0.2.0",
     "promise-defer": "1.0.0",
+    "prop-types": "^15.6.0",
     "raf": "3.3.0",
     "typedarray-pool": "1.1.0",
     "vendor-prefix": "0.1.0"
